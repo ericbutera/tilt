@@ -1,0 +1,9 @@
+def redpanda():
+    """
+    Run a Redpanda instance. This is a drop-in replacement for Kafka.
+    """
+    # TODO: https://docs.redpanda.com/current/get-started/docker-compose-labs/
+    current_dir = os.path.dirname(__file__)
+    yaml_path = os.path.join(current_dir, 'redpanda.yaml')
+    k8s_yaml(yaml_path)
+    k8s_resource('redpanda', port_forwards=[9092,9644])
