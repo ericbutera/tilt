@@ -1,0 +1,37 @@
+load('ext://restart_process', 'docker_build_with_restart')
+
+GO_DEPS = ['./pkg','./tools','./internal']
+
+DOCKERFILE = """
+FROM alpine
+WORKDIR /app
+ADD bin bin
+ENTRYPOINT /app/bin/app
+"""
+
+def go_compile(name, dir, deps):
+  """
+  Compiles a Go binary in the given directory.
+  """
+  local_resource(
+    name,
+    "CGO_ENABLED=0 GOOS=linux go build -o bin/app",
+    dir=dir,
+    ignore=['**/bin'],
+    deps=GO_DEPS + deps,
+    labels=['compile'],
+    allow_parallel=True,
+  )
+
+def go_image(name, dir):
+  """
+  Builds a Docker image with the Go binary in the given directory.
+  """
+  docker_build_with_restart(
+    name + '-image',
+    dir,
+    entrypoint=['/app/bin/app'],
+    only=['./bin'],
+    live_update=[sync(dir + '/bin', '/app/bin')],
+    dockerfile_contents=DOCKERFILE,
+  )
