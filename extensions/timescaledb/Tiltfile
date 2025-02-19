@@ -1,0 +1,10 @@
+load('ext://restart_process', 'docker_build_with_restart')
+
+def timescaledb(port_forwards='5432'):
+    """
+    Run a timescaledb instance
+    """
+    current_dir = os.path.dirname(__file__)
+    yaml_path = os.path.join(current_dir, 'timescaledb.yaml')
+    k8s_yaml(yaml_path)
+    k8s_resource('timescaledb', port_forwards=port_forwards)
