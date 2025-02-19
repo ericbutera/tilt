@@ -1,0 +1,7 @@
+load('ext://restart_process', 'docker_build_with_restart')
+
+def kafdrop():
+    current_dir = os.path.dirname(__file__)
+    yaml_path = os.path.join(current_dir, 'kafdrop.yaml')
+    k8s_yaml(yaml_path)
+    k8s_resource('kafdrop', port_forwards='9000:9000')
