@@ -1,10 +1,48 @@
 load('ext://restart_process', 'docker_build_with_restart')
 
-def timescaledb(port_forwards='5432'):
+def timescaledb(name='timescaledb', port_forwards='5432'):
     """
     Run a timescaledb instance
     """
-    current_dir = os.path.dirname(__file__)
-    yaml_path = os.path.join(current_dir, 'timescaledb.yaml')
-    k8s_yaml(yaml_path)
-    k8s_resource('timescaledb', port_forwards=port_forwards)
+    k8s_yaml(blob(service_yaml(name)))
+    k8s_resource(name, port_forwards=port_forwards)
+
+def service_yaml(name='timescaledb', port='5432'):
+    return """
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: %s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: %s
+  template:
+    metadata:
+      labels:
+        app: %s
+    spec:
+      containers:
+      - name: %s
+        image: timescale/timescaledb-ha:pg17
+        ports:
+        - containerPort: %s
+        env:
+        - name: POSTGRES_HOST_AUTH_METHOD
+          value: trust
+        - name: POSTGRES_PASSWORD
+          value: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: %s
+spec:
+  selector:
+    app: %s
+  ports:
+  - name: %s
+    port: %s
+    targetPort: %s
+""" % (name, name, name, name, port, name, name, name, port, port)

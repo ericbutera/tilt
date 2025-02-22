@@ -14,5 +14,11 @@ load('ext://go_helper', 'go_compile', 'go_image')
 
 ### Go
 
-- `go_build` - Build a local development go binary
-- `go_image` - Build a local development docker image
+
+## Timescale
+
+```py
+v1alpha1.extension(name='timescaledb', repo_name='eb', repo_path='extensions/timescaledb')
+load('ext://timescaledb', 'timescaledb')
+timescaledb(port_forwards='15432:5432')
+```
