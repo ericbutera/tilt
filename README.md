@@ -38,7 +38,15 @@ load('ext://golang-migrate', 'golang_migrate')
 golang_migrate(dsn=DSN, resource_deps=['timescaledb'])
 ```
 
-## Redpanda
+## [NATS](./extensions/nats/)
+
+```py
+v1alpha1.extension(name='nats', repo_name='eb', repo_path='extensions/nats')
+load('ext://nats', 'nats')
+nats()
+```
+
+## [Redpanda](./extensions/redpanda/)
 
 ```py
 v1alpha1.extension(name='redpanda', repo_name='eb', repo_path='extensions/redpanda')
@@ -46,7 +54,7 @@ load('ext://redpanda', 'redpanda')
 redpanda()
 ```
 
-## Timescale
+## [Timescale](./extensions/timescaledb/)
 
 ```py
 v1alpha1.extension(name='timescaledb', repo_name='eb', repo_path='extensions/timescaledb')

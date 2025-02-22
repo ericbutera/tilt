@@ -1,0 +1,59 @@
+load('ext://restart_process', 'docker_build_with_restart')
+
+# https://nats.io/
+# https://github.com/bitnami/charts/tree/main/bitnami/nats
+def nats(name='nats', port=4222, web_port=8222, metrics_port=9090): #port_forwards=['4222:4222', '8222:8222']):
+    port_forwards = [
+        port_forward(port, port, "svc"),
+        port_forward(web_port, web_port, "web"),
+        port_forward(metrics_port, metrics_port, "metrics"),
+    ]
+    k8s_yaml(blob(nats_yaml(name)))
+    k8s_resource('nats', port_forwards=port_forwards)
+
+def nats_yaml(name='nats', port=4222, web_port=8222, metrics_port=9090):
+    return """
+apiVersion: v1
+kind: Service
+metadata:
+  name: %s
+spec:
+  selector:
+    app: %s
+  ports:
+  - name: clients
+    protocol: TCP
+    port: %s
+    targetPort: %s
+  - name: web-reporting
+    protocol: TCP
+    port: %s
+    targetPort: %s
+  - name: metrics
+    protocol: TCP
+    port: %s
+    targetPort: %s
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: %s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: %s
+  template:
+    metadata:
+      labels:
+        app: %s
+    spec:
+      containers:
+      - name: %s
+        image: nats
+        command: [ "nats-server", "-js" ]
+        ports:
+        - containerPort: %s
+        - containerPort: %s
+        - containerPort: %s
+""" % (name, name, port, port, web_port, web_port, metrics_port, metrics_port, name, name, name, name, port, web_port, metrics_port)
