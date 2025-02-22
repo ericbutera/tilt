@@ -36,14 +36,26 @@ def go_image(name, dir):
     dockerfile_contents=DOCKERFILE,
   )
 
-def go_service(name, port_forwards=[], resource_deps=[]):
-  """
-  :resource_deps array 'readings-compile', 'timescaledb'
-  """
-  k8s_yaml(blob(go_service_yaml(name)))
+def go_service(name, port_forwards=[], resource_deps=[], env_vars={}):
+  deployment_yaml = go_deployment_yaml(name, env_vars=env_vars)
+  service_yaml = go_service_yaml(name, port=8080)
+  k8s_yaml(blob(deployment_yaml))
+  k8s_yaml(blob(service_yaml))
   k8s_resource(name, port_forwards=port_forwards, resource_deps=resource_deps)
 
-def go_service_yaml(name="app", port=8080):
+def set_env_variables(env_vars):
+    env_str = ""
+    for key, value in env_vars.items():
+        env_str += """
+            - name: %s
+              value: %s
+        """ % (key, value)
+    return env_str
+
+
+def go_deployment_yaml(name="app", env_vars={}):
+    env_section = set_env_variables(env_vars)
+
     return """
 apiVersion: apps/v1
 kind: Deployment
@@ -62,7 +74,12 @@ spec:
             containers:
             - name: %s
               image: %s-image:latest
----
+              env: %s
+""" % (name, name, name, name, name, env_section)
+
+
+def go_service_yaml(name="app", port=8080):
+    return """
 apiVersion: v1
 kind: Service
 metadata:
@@ -74,4 +91,4 @@ spec:
     - name: %s
       port: %s
       targetPort: %s
-""" % (name, name, name, name, name, name, name, name, port, port)
+""" % (name, name, name, port, port)
