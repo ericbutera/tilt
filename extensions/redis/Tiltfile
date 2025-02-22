@@ -1,0 +1,25 @@
+load('ext://helm_resource', 'helm_resource', 'helm_repo')
+load('ext://restart_process', 'docker_build_with_restart')
+load('ext://secret', 'secret_create_generic', 'secret_from_dict')
+
+def redis(port_forwards=["6379:6379"]):
+    """
+    Deploy a Redis instance on Kubernetes.
+    """
+    helm_repo('bitnami', 'https://charts.bitnami.com/bitnami')
+    helm_resource(
+        name='redis',
+        chart='bitnami/redis',
+        namespace='default',
+        flags=[
+            '--set=cluster.enabled=false',
+            '--set=usePassword=false',
+            '--set=auth.enabled=false',
+            '--set=architecture=standalone',
+            '--set=replica.enabled=false',
+            '--set=replica.replicaCount=0',
+            '--set=service.type=LoadBalancer',
+        ],
+        port_forwards=port_forwards,
+        labels=['cache']
+    )

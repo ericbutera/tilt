@@ -46,6 +46,14 @@ load('ext://nats', 'nats')
 nats()
 ```
 
+## [Redis](./extensions/redis/)
+
+```py
+v1alpha1.extension(name='redis', repo_name='eb', repo_path='extensions/redis')
+load('ext://redis', 'redis')
+redis()
+```
+
 ## [Redpanda](./extensions/redpanda/)
 
 ```py
