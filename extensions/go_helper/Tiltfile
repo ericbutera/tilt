@@ -1,6 +1,6 @@
 load('ext://restart_process', 'docker_build_with_restart')
 
-GO_DEPS = ['./pkg','./tools','./internal']
+GO_DEPS = ['./cmd', './pkg','./tools','./internal']
 
 DOCKERFILE = """
 FROM alpine
@@ -35,3 +35,43 @@ def go_image(name, dir):
     live_update=[sync(dir + '/bin', '/app/bin')],
     dockerfile_contents=DOCKERFILE,
   )
+
+def go_service(name, port_forwards=[], resource_deps=[]):
+  """
+  :resource_deps array 'readings-compile', 'timescaledb'
+  """
+  k8s_yaml(blob(go_service_yaml(name)))
+  k8s_resource(name, port_forwards=port_forwards, resource_deps=resource_deps)
+
+def go_service_yaml(name="app", port=8080):
+    return """
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: %s
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: %s
+    template:
+        metadata:
+            labels:
+                app: %s
+        spec:
+            containers:
+            - name: %s
+              image: %s-image:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: %s
+spec:
+    selector:
+        app: %s
+    ports:
+    - name: %s
+      port: %s
+      targetPort: %s
+""" % (name, name, name, name, name, name, name, name, port, port)

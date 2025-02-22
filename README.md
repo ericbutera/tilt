@@ -22,6 +22,13 @@ v1alpha1.extension_repo('eb', url='https://github.com/ericbutera/tilt')
 
 ### Go
 
+```py
+v1alpha1.extension(name='go_helper', repo_name='eb', repo_path='extensions/go_helper')
+load('ext://go_helper', 'go_compile', 'go_image')
+go_compile('worker-compile', './cmd/worker', ['./cmd/worker']) # build app
+go_image('worker', './cmd/worker') # inject app into image
+```
+
 ### [golang-migrate](./extensions/golang-migrate/)
 
 ```py
