@@ -9,9 +9,3 @@ def redpanda():
     yaml_path = os.path.join(current_dir, 'redpanda.yaml')
     k8s_yaml(yaml_path)
     k8s_resource('redpanda', port_forwards=[9092,9644])
-
-    #run("kubectl exec -it redpanda-0 in redpanda -- rpk topic create demo")
-    # kubectl exec -it redpanda-0 in redpanda -- bash
-    # rpk topic create demo
-    # rpk topic create turkey
-    # rpk topic list
