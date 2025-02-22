@@ -12,7 +12,24 @@ load('ext://go_helper', 'go_compile', 'go_image')
 
 ## Helpers
 
+Prerequisites:
+
+Load extension repo
+
+```py
+v1alpha1.extension_repo('eb', url='https://github.com/ericbutera/tilt')
+```
+
 ### Go
+
+### [golang-migrate](./extensions/golang-migrate/)
+
+```py
+DSN = "postgres://postgres:password@timescaledb:5432/postgres?sslmode=disable"
+v1alpha1.extension(name='golang-migrate', repo_name='eb', repo_path='extensions/golang-migrate')
+load('ext://golang-migrate', 'golang_migrate')
+golang_migrate(dsn=DSN, resource_deps=['timescaledb'])
+```
 
 
 ## Timescale

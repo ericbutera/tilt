@@ -1,0 +1,40 @@
+# https://github.com/golang-migrate/migrate
+
+def golang_migrate(name="golang-migrate", path="migrations",
+    dsn="postgres://postgres:password@pg-postgresql:5432/postgres",
+    resource_deps=[],
+    labels=["database"],
+):
+    # postgres://postgres:password@pg-postgresql:5432/postgres?sslmode=disable
+    docker_build(name+"-image", path, dockerfile_contents=dockerfile(dsn))
+    k8s_yaml(blob(migration_yaml(name)))
+    k8s_resource(name, resource_deps=resource_deps, labels=labels)
+
+def dockerfile(dsn):
+    return """
+    FROM migrate/migrate
+    COPY ./ /migrations
+    CMD ["-path", "/migrations", "-database", "%s", "up"]
+    """ % dsn
+
+def migration_yaml(name="migrate"):
+    return """
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+        labels:
+            service: %s
+        name: %s
+    spec:
+        template:
+            metadata:
+                name: %s
+                labels:
+                    service: %s
+            spec:
+                containers:
+                    - name: %s
+                      image: %s-image
+                restartPolicy: Never
+        backoffLimit: 10
+    """ % (name, name, name, name, name, name)
