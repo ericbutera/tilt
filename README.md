@@ -38,7 +38,15 @@ load('ext://golang-migrate', 'golang_migrate')
 golang_migrate(dsn=DSN, resource_deps=['timescaledb'])
 ```
 
-## [NATS](./extensions/nats/)
+### [Postgres](./extensions/postgres/)
+
+```py
+v1alpha1.extension(name='postgres', repo_name='eb', repo_path='extensions/postgres')
+load('ext://postgres', 'postgres')
+postgres()
+```
+
+### [NATS](./extensions/nats/)
 
 ```py
 v1alpha1.extension(name='nats', repo_name='eb', repo_path='extensions/nats')
@@ -46,7 +54,7 @@ load('ext://nats', 'nats')
 nats()
 ```
 
-## [Redis](./extensions/redis/)
+### [Redis](./extensions/redis/)
 
 ```py
 v1alpha1.extension(name='redis', repo_name='eb', repo_path='extensions/redis')
@@ -54,7 +62,7 @@ load('ext://redis', 'redis')
 redis()
 ```
 
-## [Redpanda](./extensions/redpanda/)
+### [Redpanda](./extensions/redpanda/)
 
 ```py
 v1alpha1.extension(name='redpanda', repo_name='eb', repo_path='extensions/redpanda')
@@ -62,7 +70,7 @@ load('ext://redpanda', 'redpanda')
 redpanda()
 ```
 
-## [Timescale](./extensions/timescaledb/)
+### [Timescale](./extensions/timescaledb/)
 
 ```py
 v1alpha1.extension(name='timescaledb', repo_name='eb', repo_path='extensions/timescaledb')

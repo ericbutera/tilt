@@ -1,0 +1,23 @@
+# https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+load('ext://helm_resource', 'helm_resource', 'helm_repo')
+load('ext://restart_process', 'docker_build_with_restart')
+load('ext://secret', 'secret_create_generic', 'secret_from_dict')
+
+
+def postgres(password="password"):
+    k8s_yaml(secret_from_dict("tilt-pg", inputs = {
+        'postgres-password' : password
+    }))
+    helm_repo('bitnami', 'https://charts.bitnami.com/bitnami')
+    helm_resource(
+        name='postgres',
+        chart='bitnami/postgresql',
+        namespace='default',
+        flags=[
+            '--set=image.tag=15-debian-11',
+            '--set=global.postgresql.auth.existingSecret=tilt-pg',
+            '--set=primary.persistence.enabled=false',
+            '--set=fullnameOverride=postgres',
+        ],
+        labels=['database']
+    )
