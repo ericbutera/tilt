@@ -1,0 +1,52 @@
+load('ext://helm_resource', 'helm_resource', 'helm_repo')
+
+DOCKERFILE = """
+FROM opensearch-migrator
+COPY ./ /migrations
+"""
+
+# TODO: configuration
+# - name
+# - port
+# - persistent volume
+# - document how to use this (create opensearch-migrator with specific index-name/mapping.js)
+def opensearch():
+    helm_repo('bitnami', 'https://charts.bitnami.com/bitnami', 'bitnami-opensearch')
+    helm_resource(
+        name='opensearch',
+        chart='bitnami/opensearch',
+        namespace='default',
+        flags=[
+            '--set=master.resourcesPreset=xlarge',
+        ],
+        port_forwards=["9200:9200"],
+    )
+
+def opensearch_migrator(name='opensearch-init', path='opensearch', resource_deps=['opensearch']):
+    current_dir = os.path.dirname(__file__)
+    path = os.path.join(current_dir, 'curlator')
+    docker_build("opensearch-migrator", path)
+
+    docker_build("opensearch-migrator-data", "opensearch-migrator", dockerfile_contents=DOCKERFILE)
+    migrate_job("opensearch-migrator", resource_deps=["opensearch"])
+
+
+def migrate_job(name, resource_deps=[]):
+  k8s_yaml(blob(job_yaml(name)))
+  k8s_resource(name, resource_deps=resource_deps)
+
+def job_yaml(name="opensearch-migrator"):
+    return """
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: %s
+spec:
+  template:
+    spec:
+      containers:
+        - name: %s
+          image: %s-data
+      restartPolicy: Never
+  backoffLimit: 4
+""" % (name, name, name)
