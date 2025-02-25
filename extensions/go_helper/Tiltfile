@@ -47,35 +47,35 @@ def set_env_variables(env_vars):
     env_str = ""
     for key, value in env_vars.items():
         env_str += """
-            - name: %s
-              value: %s
+          - name: %s
+            value: %s
         """ % (key, value)
     return env_str
 
 
 def go_deployment_yaml(name="app", env_vars={}):
-    env_section = set_env_variables(env_vars)
-
-    return """
+  env_section = set_env_variables(env_vars)
+  dep = """
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: %s
+  name: %s
 spec:
-    replicas: 1
-    selector:
-        matchLabels:
-            app: %s
-    template:
-        metadata:
-            labels:
-                app: %s
-        spec:
-            containers:
-            - name: %s
-              image: %s-image:latest
-              env: %s
+  replicas: 1
+  selector:
+    matchLabels:
+      app: %s
+  template:
+    metadata:
+        labels:
+          app: %s
+    spec:
+      containers:
+      - name: %s
+        image: %s-image:latest
+        env: %s
 """ % (name, name, name, name, name, env_section)
+  return dep
 
 
 def go_service_yaml(name="app", port=8080):
@@ -83,12 +83,35 @@ def go_service_yaml(name="app", port=8080):
 apiVersion: v1
 kind: Service
 metadata:
-    name: %s
+  name: %s
 spec:
-    selector:
-        app: %s
-    ports:
-    - name: %s
-      port: %s
-      targetPort: %s
+  selector:
+    app: %s
+  ports:
+  - name: %s
+    port: %s
+    targetPort: %s
 """ % (name, name, name, port, port)
+
+def go_job(name, resource_deps=[], env_vars={}):
+  k8s_yaml(blob(go_job_yaml(name, env_vars=env_vars)))
+  k8s_resource(name, resource_deps=resource_deps)
+
+def go_job_yaml(name="app", env_vars={}):
+    env_section = set_env_variables(env_vars)
+    return """
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: %s
+spec:
+  template:
+    spec:
+      containers:
+        - name: %s
+          image: %s-image
+          env: %s
+      restartPolicy: Never
+  backoffLimit: 4
+""" % (name, name, name, env_section)
+
