@@ -8,4 +8,25 @@ def redpanda():
     current_dir = os.path.dirname(__file__)
     yaml_path = os.path.join(current_dir, 'redpanda.yaml')
     k8s_yaml(yaml_path)
-    k8s_resource('redpanda', port_forwards=[9092,9644])
+    k8s_resource('redpanda', port_forwards=['9092:9092','9644:9644'])
+
+def redpanda_create_topics(topics=["my-topic"]):
+    topics_args = ", ".join(['"{}"'.format(t) for t in topics])
+    job_yaml = """
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redpanda-create-topic
+spec:
+  template:
+    spec:
+      containers:
+      - name: redpanda-create-topic
+        image: redpandadata/redpanda:v24.2.18
+        command: ["rpk", "topic", "create", %s, "--brokers=redpanda:9092"]
+      restartPolicy: Never
+  backoffLimit: 4
+""" % (topics_args)
+
+    k8s_yaml(blob(job_yaml))
+    k8s_resource('redpanda-create-topic', resource_deps=['redpanda'])

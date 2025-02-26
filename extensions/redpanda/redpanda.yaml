@@ -51,11 +51,3 @@ spec:
   - name: admin
     port: 9644
     targetPort: 9644
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: redpanda-config
-data:
-  redpanda.yaml: |
-    enable_auto_creation: true
