@@ -1,0 +1,37 @@
+# https://github.com/bitnami/charts/tree/main/bitnami/minio
+load('ext://helm_resource', 'helm_resource', 'helm_repo')
+load('ext://restart_process', 'docker_build_with_restart')
+load('ext://secret', 'secret_create_generic', 'secret_from_dict')
+
+def minio(user='minio', password='password'):
+    """
+    Run a minio object storage instance. This is a drop-in replacement for S3.
+    """
+    k8s_yaml(secret_from_dict("minio-auth", inputs = { # TODO: possibly pass secret name in
+        'root-user' : user,
+        'root-password' : password,
+    }))
+    helm_repo('bitnami', 'https://charts.bitnami.com/bitnami', resource_name='minio-bitnami')
+    helm_resource(
+        name='minio',
+        chart='bitnami/minio',
+        flags=[
+            '--set=auth.existingSecret=minio-auth',
+            '--set=defaultBuckets="bucket"',
+            '--set=service.type=LoadBalancer',
+            '--set=mode=standalone',
+            '--set=persistence.enabled=false',
+            '--set=replicas=1',
+            '--set=consoleService.type=LoadBalancer',
+            '--set=resources.requests.memory=256Mi',
+        ],
+        port_forwards=[
+            port_forward(9100, 9000, 'minio-service'),
+            port_forward(9101, 9001, 'minio-admin'),
+        ],
+    )
+
+    # load('ext://helm_remote', 'helm_remote')
+    # helm_remote('minio',
+    #     repo_name='bitnami',
+    #     repo_url='https://charts.bitnami.com/bitnami')
