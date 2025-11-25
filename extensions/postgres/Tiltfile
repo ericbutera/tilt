@@ -12,4 +12,4 @@ def postgres(password="password", port_forwards=[5432], labels=['database']):
     current_dir = os.path.dirname(__file__)
     yaml_path = os.path.join(current_dir, 'postgres.yaml')
     k8s_yaml(yaml_path)
-    k8s_resource('postgres', port_forwards=port_forwards)
+    k8s_resource('postgres', port_forwards=port_forwards, labels=["database"])
