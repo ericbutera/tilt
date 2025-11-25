@@ -1,0 +1,104 @@
+# https://github.com/grafana/docker-otel-lgtm/blob/main/k8s/lgtm.yaml
+# this is intended for demo / testing purposes only, not for production usage
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lgtm
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: lgtm-prometheus
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: lgtm-prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: lgtm-prometheus
+subjects:
+  - kind: ServiceAccount
+    name: lgtm
+    namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lgtm
+spec:
+  selector:
+    app: lgtm
+  ports:
+    - name: grafana
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+    - name: loki
+      protocol: TCP
+      port: 3100
+      targetPort: 3100
+    - name: otel-grpc
+      protocol: TCP
+      port: 4317
+      targetPort: 4317
+    - name: otel-http
+      protocol: TCP
+      port: 4318
+      targetPort: 4318
+    - name: prometheus
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lgtm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lgtm
+  template:
+    metadata:
+      labels:
+        app: lgtm
+    spec:
+      serviceAccountName: lgtm
+      containers:
+        - name: lgtm
+          image: lgtm-image
+          env:
+            # - name: ENABLE_LOGS_ALL
+            #   value: "true"
+            # - name: ENABLE_LOGS_GRAFANA
+            #   value: "true"
+          ports:
+            - containerPort: 3000
+            - containerPort: 3100
+            - containerPort: 4317
+            - containerPort: 4318
+            - containerPort: 9090
+          readinessProbe:
+            exec:
+              command:
+                - cat
+                - /tmp/ready

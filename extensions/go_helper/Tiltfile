@@ -36,9 +36,16 @@ def go_image(name, dir):
     dockerfile_contents=DOCKERFILE,
   )
 
-def go_service(name, port_forwards=[], resource_deps=[], env_vars={}):
+def go_service(name, port_forwards=[], resource_deps=[], env_vars={}, service_annotations={}):
+  # Default Prometheus annotations if none provided
+  if not service_annotations:
+    service_annotations = {
+      'prometheus.io/scrape': 'true',
+      'prometheus.io/path': '/metrics',
+      'prometheus.io/port': '8080',
+    }
   deployment_yaml = go_deployment_yaml(name, env_vars=env_vars)
-  service_yaml = go_service_yaml(name, port=8080)
+  service_yaml = go_service_yaml(name, port=8080, annotations=service_annotations)
   k8s_yaml(blob(deployment_yaml))
   k8s_yaml(blob(service_yaml))
   k8s_resource(name, port_forwards=port_forwards, resource_deps=resource_deps)
@@ -78,12 +85,18 @@ spec:
   return dep
 
 
-def go_service_yaml(name="app", port=8080):
+def go_service_yaml(name="app", port=8080, annotations={}):
+    annotations_section = ""
+    if annotations:
+        annotations_section = "\n  annotations:"
+        for key, value in annotations.items():
+            annotations_section += "\n    %s: \"%s\"" % (key, value)
+
     return """
 apiVersion: v1
 kind: Service
 metadata:
-  name: %s
+  name: %s%s
 spec:
   selector:
     app: %s
@@ -91,7 +104,7 @@ spec:
   - name: %s
     port: %s
     targetPort: %s
-""" % (name, name, name, port, port)
+""" % (name, annotations_section, name, name, port, port)
 
 def go_job(name, resource_deps=[], env_vars={}):
   k8s_yaml(blob(go_job_yaml(name, env_vars=env_vars)))
