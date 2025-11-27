@@ -6,7 +6,7 @@ storage:
 scrape_configs:
   # Scrape pods with prometheus.io/scrape annotation
   - job_name: "kubernetes-pods"
-    scrape_interval: 30s
+    scrape_interval: 10s
     kubernetes_sd_configs:
       - role: pod
     relabel_configs:
